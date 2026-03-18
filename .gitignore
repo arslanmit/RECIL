@@ -1,0 +1,47 @@
+# OS / editor metadata
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python cache / build artifacts
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Local data and experiment outputs
+data/
+wandb/
+runs/
+logs/
+outputs/
+.cache/
+
+# Model checkpoints / weights
+checkpoint_*.pth.tar
+*.pth.tar
+*.ckpt
+*.pth
+*.pt
+
+# TensorBoard
+events.out.tfevents*

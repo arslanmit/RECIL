@@ -6,6 +6,7 @@
 
 import torch
 import torch.nn as nn
+import torch.distributed as dist
 
 
 class MoCo(nn.Module):
@@ -69,7 +70,9 @@ class MoCo(nn.Module):
         # Einstein sum is more intuitive
         logits = torch.einsum('nc,mc->nm', [q, k]) / self.T
         N = logits.shape[0]  # batch size per GPU
-        labels = (torch.arange(N, dtype=torch.long) + N * torch.distributed.get_rank()).cuda()
+        # Fallback to rank 0 when not running with torch.distributed.
+        rank = dist.get_rank() if dist.is_available() and dist.is_initialized() else 0
+        labels = torch.arange(N, dtype=torch.long, device=logits.device) + N * rank
         return nn.CrossEntropyLoss()(logits, labels) * (2 * self.T)
 
     def forward(self, x1, x2, m):
@@ -129,9 +132,11 @@ def concat_all_gather(tensor):
     Performs all_gather operation on the provided tensors.
     *** Warning ***: torch.distributed.all_gather has no gradient.
     """
-    tensors_gather = [torch.ones_like(tensor)
-        for _ in range(torch.distributed.get_world_size())]
-    torch.distributed.all_gather(tensors_gather, tensor, async_op=False)
+    if not dist.is_available() or not dist.is_initialized():
+        return tensor
+
+    tensors_gather = [torch.ones_like(tensor) for _ in range(dist.get_world_size())]
+    dist.all_gather(tensors_gather, tensor, async_op=False)
 
     output = torch.cat(tensors_gather, dim=0)
     return output
